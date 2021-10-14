@@ -1,3 +1,3 @@
-# Compuational-Economics-Econ899-
+# Compuational Economics
 
-# test
+Lecture notes, problem sets, and final projects for Computational Economics (Econ899).
