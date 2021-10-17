@@ -107,8 +107,8 @@ mutable struct Results
     a1::Float64
     b0::Float64
     b1::Float64
-    idio_state::Array{Float64}
-    agg_state::Array{Float64}
+    idio_state::Array{Int64}
+    agg_state::Array{Int64}
     R²::Float64
 end
 
@@ -129,16 +129,16 @@ function Initialize()
     prim, res
 end
 
-function draw_shocks(prim::Primitives)
+function draw_shocks(prim::Primitives, res::Results)
     @unpack pgg, pbb, Mgg, Mgb, Mbg, Mbb, N, T = prim
-
+    @unpack agg_state, idio_state = res
     # Shock
     Random.seed!(12032020)
     dist = Uniform(0, 1)
 
     # Allocate space for shocks and initialize
-    idio_state = zeros(N, T)
-    agg_state = zeros(T)
+    idio_state::Array{Int64} = zeros(N, T)
+    agg_state::Array{Int64} = zeros(T)
     idio_state[:,1] .= 1
     agg_state[1] = 1
 
@@ -323,6 +323,32 @@ function get_index(val::Float64, grid::Array{Float64,1})
     return index
 end
 
+function KKpath(prim::Primitives, res::Results)
+    @unpack T, N, K_grid = prim
+    @unpack pol_func = res
+    KK_path = zeros(T) # aggregate capital path
+    k_path = zeros(N, T)
+    KK_path[1] = 11.55
+    for n = 1:N
+        k_path[n, 1] = KK_path[1]
+    end
+    pol_func_interp = interpolate(pol_func, BSpline(Linear()))
+    for t = 1:T
+        KK_index = get_index(KK_path[t], K_grid)
+        z_index = agg_state[t]
+        idio_state_t = idio_state[:, t]
+        k_path_t = k_path[:, t]
+        for n = 1:N
+            ε_index = idio_state_t[n]
+            k_index = get_index(k_path_t[n], prim.k_grid)
+            k_path[n, t+1] = pol_func_interp[k_index, ε_index, KK_index, z_index]
+            KK_path[t+1] += k_path[n, t+1]
+        end
+        KK_path[t+1] = KK_path[t+1]/N
+        println(t, " is done.")
+    end
+KK_path, k_path
+end
 
 function Solve_model(prim::Primitives, res::Results; tol::Float64=.01)
     error = 100.0
