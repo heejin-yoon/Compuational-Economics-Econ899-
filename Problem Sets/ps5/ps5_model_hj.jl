@@ -17,7 +17,7 @@ using Random, Interpolations, Optim, Distributions
 
     N::Int64 = 5000 # number of individuals
     T::Int64 = 11000 # number of time periods
-    # burn::Int64 = 1000
+    burn::Int64 = 1000
     #
     # tol_vfi::Float64 = 1e-4
     # tol_coef::Float64 = 1e-4
@@ -85,10 +85,10 @@ using Random, Interpolations, Optim, Distributions
     n_k::Int64 = 21
     k_grid::Array{Float64,1} = range(k_lb, stop = k_ub, length = n_k)
 
-    K_lb::Float64 = 10.0
-    K_ub::Float64 = 15.0
-    n_K::Int64 = 11
-    K_grid::Array{Float64,1} = range(K_lb, stop = K_ub, length = n_K)
+    KK_lb::Float64 = 10.0
+    KK_ub::Float64 = 15.0
+    n_KK::Int64 = 11
+    KK_grid::Array{Float64,1} = range(KK_lb, stop = KK_ub, length = n_KK)
 
     ē::Float64 = 0.3271
     ε_grid::Array{Float64,1} = [1.0, 0.0] .* ē
@@ -98,6 +98,7 @@ using Random, Interpolations, Optim, Distributions
     n_z::Int64 = length(z_grid)
 
     L_grid::Array{Float64,1} = [1.0-u_g, 1.0-u_b] .* ē
+
 end
 
 mutable struct Results
@@ -109,22 +110,26 @@ mutable struct Results
     b1::Float64
     idio_state::Array{Int64}
     agg_state::Array{Int64}
-    R²::Float64
+    KK_path::Array{Float64}
+    k_path::Array{Float64}
+    R²::Array{Float64}
 end
 
 function Initialize()
     prim = Primitives()
-    @unpack n_k, n_K, n_z, n_ε, N, T = prim
-    pol_func = zeros(n_k, n_ε, n_K, n_z)
-    val_func = zeros(n_k, n_ε, n_K, n_z)
+    @unpack n_k, n_KK, n_z, n_ε, N, T = prim
+    pol_func = zeros(n_k, n_ε, n_KK, n_z)
+    val_func = zeros(n_k, n_ε, n_KK, n_z)
     a0 = 0.0095
     a1 = 0.999
     b0 = 0.0085
     b1 = 0.999
     idio_state = zeros(N, T)
     agg_state = zeros(T)
-    R² = 0.0
-    res = Results(pol_func, val_func, a0, a1, b0, b1, idio_state, agg_state, R²)
+    KK_path = zeros(T)
+    k_path = zeros(N, T)
+    R² = zeros(2)
+    res = Results(pol_func, val_func, a0, a1, b0, b1, idio_state, agg_state, KK_path, k_path, R²)
 
     prim, res
 end
@@ -216,10 +221,10 @@ function draw_shocks(prim::Primitives, res::Results)
 end
 
 function Prices(prim::Primitives, K_index::Int64, z_index::Int64)
-    @unpack α, z_grid, K_grid, L_grid = prim
+    @unpack α, z_grid, KK_grid, L_grid = prim
 
-    r = α*z_grid[z_index]*(K_grid[K_index]/L_grid[z_index])^(α-1)
-    w = (1-α)*z_grid[z_index]*(K_grid[K_index]/L_grid[z_index])^α
+    r = α*z_grid[z_index]*(KK_grid[K_index]/L_grid[z_index])^(α-1)
+    w = (1-α)*z_grid[z_index]*(KK_grid[K_index]/L_grid[z_index])^α
 
     r, w
 end
@@ -228,15 +233,15 @@ end
 ##scale
 
 function Bellman(prim::Primitives, res::Results)
-    @unpack β, α, δ, n_k, k_grid, n_ε, ε_grid, K_grid, n_K, n_z, z_grid, u_g, u_b, markov = prim
+    @unpack β, α, δ, n_k, k_grid, n_ε, ε_grid, KK_grid, n_KK, n_z, z_grid, u_g, u_b, markov = prim
     @unpack val_func, a0, a1, b0, b1= res
 
-    val_func_update = zeros(n_k, n_ε, n_K, n_z)
+    val_func_update = zeros(n_k, n_ε, n_KK, n_z)
 
     k_interp = interpolate(k_grid, BSpline(Linear()))
     v_interp = interpolate(val_func, BSpline(Linear()))
 
-    for (K_index, K_today) in enumerate(K_grid), (z_index, z_today) in enumerate(z_grid)
+    for (K_index, K_today) in enumerate(KK_grid), (z_index, z_today) in enumerate(z_grid)
         if z_index == 1
             K_tomorrow = a0 + a1*log(K_today)
         elseif z_index == 2
@@ -245,7 +250,7 @@ function Bellman(prim::Primitives, res::Results)
         K_tomorrow = exp(K_tomorrow)
 
         # See that K_tomorrow likely does not fall on our K_grid...this is why we need to interpolate!
-        Kp_index = get_index(K_tomorrow, K_grid)
+        Kp_index = get_index(K_tomorrow, KK_grid)
 
         r_today, w_today = Prices(prim, K_index, z_index)
 
@@ -324,56 +329,98 @@ function get_index(val::Float64, grid::Array{Float64,1})
 end
 
 function KKpath(prim::Primitives, res::Results)
-    @unpack T, N, K_grid = prim
-    @unpack pol_func = res
+    @unpack T, N, KK_grid, k_grid = prim
+    @unpack pol_func, idio_state, agg_state, KK_path, k_path = res
+
     KK_path = zeros(T) # aggregate capital path
     k_path = zeros(N, T)
     KK_path[1] = 11.55
     for n = 1:N
         k_path[n, 1] = KK_path[1]
     end
-    pol_func_interp = interpolate(pol_func, BSpline(Linear()))
-    for t = 1:T
-        KK_index = get_index(KK_path[t], K_grid)
+    pol_func_interp = interpolate(res.pol_func, BSpline(Linear()))
+    for t = 1:(T-1)
+        KK_index = get_index(KK_path[t], KK_grid)
         z_index = agg_state[t]
         idio_state_t = idio_state[:, t]
         k_path_t = k_path[:, t]
         for n = 1:N
             ε_index = idio_state_t[n]
-            k_index = get_index(k_path_t[n], prim.k_grid)
-            k_path[n, t+1] = pol_func_interp[k_index, ε_index, KK_index, z_index]
-            KK_path[t+1] += k_path[n, t+1]
+            k_index = get_index(k_path_t[n], k_grid)
+            k_path[n, t+1] = pol_func_interp(k_index, ε_index, KK_index, z_index)
+            # KK_path[t+1] += k_path[n, t+1]
         end
-        KK_path[t+1] = KK_path[t+1]/N
-        println(t, " is done.")
+        KK_path[t+1] = mean(k_path[:, t+1])
     end
-KK_path, k_path
+    res.KK_path = KK_path
+    res.k_path = k_path
 end
 
-function Solve_model(prim::Primitives, res::Results; tol::Float64=.01)
+function OLS(prim::Primitives, res::Results)
+    @unpack T, burn = prim
+    @unpack agg_state, KK_path, a0, a1, b0, b1 = res
+    # https://juliastats.org/GLM.jl/stable/examples/
+    Y = KK_path[burn+1:T]
+    X = zeros(T-burn, 2)
+
+    for t = 1:(T-burn)
+        if agg_state[t-1+burn]==1
+            X[t, 1] = KK_path[t-1+burn]
+        elseif agg_state[t-1+burn]==2
+            X[t, 2] = KK_path[t-1+burn]
+        end
+    end
+
+    df1 = DataFrame(x=X[1:T-burn, 1], y=Y[1:T-burn])
+    df2 = DataFrame(x=X[1:T-burn, 2], y=Y[1:T-burn])
+    df1 = df1[df1."x".!=0, :]
+    df2 = df2[df2."x".!=0, :]
+
+    ols1 = lm(@formula(y ~ x), df1)
+    ols2 = lm(@formula(y ~ x), df2)
+
+    ols1, ols2
+end
+
+function solve_model(prim::Primitives, res::Results)
     error = 100.0
     tol = 0.01
+    λ = 0.5
     i = 0
     while true
         i += 1
+        println("i = ", i)
 
-        idio_state, agg_state = draw_shocks(prim)
+        res.idio_state, res.agg_state = draw_shocks(prim, res)
         println("Shock drawing is done.")
 
         V_iterate(prim, res)
-        println("Value function iteration is done.")
+        println(" ")
 
-        error = Estimate_regression(prim, res)
+        KKpath(prim, res)
+        println("K path calculation is done.")
 
-        val_func_update = Bellman(prim, res) #get new guess of value function
-        error = maximum(abs.(res.val_func - val_func_update))/abs(maximum(val_func_update)) #update error
-        res.val_func = val_func_update #update value function
-        if error < tol
+        ols1, ols2 = OLS(prim, res)
+        println("Running OLS is done.")
+
+        a0_hat, a1_hat = coef(ols1)
+        b0_hat, b1_hat = coef(ols2)
+        error = abs.(a0_hat - res.a0)+abs.(a1_hat - res.a1)+abs.(b0_hat - res.b0)+abs.(b1_hat - res.b1)
+        if error > tol
+            res.a0 = λ*a0_hat + (1-λ)*res.a0
+            res.a1 = λ*a1_hat + (1-λ)*res.a1
+            res.b0 = λ*b0_hat + (1-λ)*res.b0
+            res.b1 = λ*b1_hat + (1-λ)*res.b1
+            println("************************************")
+            println("Error (", error, ") exceeds the tolerance level (", tol, ").")
+            println("=> Guesses on coefficients are updated.")
+        else
+            println("***********************************")
+            println("Error (", error, ") is below the tolerance level (", tol, ").")
+            println("★ Solving model is done after ", i, " updates on coffecients! ★  ")
+            println(" ")
+            res.R²=[r2(ols1); r2(ols2)]
             break
         end
     end
-    # println("  ")
-    # println("********************************")
-    # println("Value function iteration is done.")
-    # println("Number of iterations: ", i, ".")
 end
