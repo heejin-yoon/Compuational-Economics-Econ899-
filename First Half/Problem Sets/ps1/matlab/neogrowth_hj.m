@@ -14,7 +14,6 @@ pi_low_high=0.074;
 pi_high_low=0.023;
 pi_high_high=0.977;
 
-%%
 % ASSET VECTOR
 klb=0.01; %lower bound of grid points
 inc=0.025; %increments
