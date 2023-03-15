@@ -8,7 +8,9 @@
 # *.pdf
 *.synctex.gz
 *.out
-*.tex
+*.tex*
+*.synctex*
+*.zip
 # *.png
 # *.jpg
 # *.jpeg
