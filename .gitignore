@@ -1,0 +1,15 @@
+*.m4a
+*.lnk
+*resources*
+*.fdb_latexmk
+*.aux
+*.fls
+*.log
+# *.pdf
+*.synctex.gz
+*.out
+*.tex
+# *.png
+# *.jpg
+# *.jpeg
+*Second Half*
