@@ -264,3 +264,125 @@ function loglikelihood_ghk(prim::Primitives, θ::Array{Float64}, XX::Array{Float
 
     return L, logL
 end
+
+function loglikelihood_acceptreject(prim::Primitives, θ::Array{Float64}, XX::Array{Float64}, ZZ::Array{Float64}, TT::Array{Float64}, u_0, u_1)
+
+    α_0 = θ[1]
+    α_1 = θ[2]
+    α_2 = θ[3]
+    β = θ[4:18]
+    γ = θ[19]
+    ρ = θ[20]
+
+    n_draw = size(u_0, 1)
+
+    σ_0 = 1 / (1 - ρ)^2
+    N = size(X, 1)
+    L = zeros(N)
+
+    ϵ_0 = quantile.(Normal(0, σ_0), u_0)
+    η_1 = quantile.(Normal(0, 1), u_1)
+    η_2 = quantile.(Normal(0, 1), u_2)
+    ϵ_1 = ρ * ϵ_0 + η_1
+    ϵ_2 = ρ * ϵ_1 + η_2
+
+    count = 0
+
+
+    a = (α_0 + x' * β + z[1] * γ .+ ϵ_0 .>Z 0)
+    sum(a)
+    # based on the value of t counts the number of accepted simulations
+    if t == 1.0
+        count = sum(α_0 + x' * β + z[1] * γ .+ ϵ_0 .> 0)
+    elseif t == 2.0
+        count = sum((α_0 + x' * β + z[1] * γ .+ ε_0 .< 0) .* (α_1 + x' * β + z[2] * γ .+ ε_1 .> 0))
+    elseif t == 3.0
+        count = sum((α_0 + x' * β + z[1] * γ .+ ε_0 .< 0) .* (α_1 + x' * β + z[2] * γ .+ ε_1 .< 0) .* (α_2 + x' * β + z[3] * γ .+ ε_2 .> 0))
+    elseif t == 4.0
+        count = sum((α_0 + x' * β + z[1] * γ .+ ε_0 .< 0) .* (α_1 + x' * β + z[2] * γ .+ ε_1 .< 0) .* (α_2 + x' * β + z[3] * γ .+ ε_2 .< 0))
+    else
+        error("Invalid value of t.")
+    end
+
+    return count / length(ε_0)
+
+
+    @threads for i_index = 1:N
+        x = X[i_index, :]
+        z = Z[i_index, :]
+        t = T[i_index]
+
+        truncation_0 = cdf(Normal(0, 1), ((-α_0 - x' * β - z[1] * γ) / σ_0))
+
+        if t == 1.0
+
+            L[i_index] = 1 - truncation_0
+
+        else # if t = 2.0 or 3.0 or 4.0
+
+            pr_0 = u_0 * truncation_0 # scales uniform rv between zero and the truncation point.
+            ε_0 = quantile.(Normal(0, σ_0), pr_0)
+
+            truncation_1 = cdf(Normal(0, 1), -α_1 .- x' * β .- z[2] * γ .- ρ .* ε_0) # initializes simulation-specific truncation points
+
+            if t == 2.0
+
+                L[i_index] = sum((truncation_0 * ones(n_draw)) .* (1 .- truncation_1)) / n_draw
+
+            else # if t = 3.0 or 4.0
+
+                pr_1 = u_1 * truncation_1' # scales uniform rv between zero and the truncation point.
+                η_1 = quantile.(Normal(0, 1), pr_1)
+                ε_1 = ρ .* (ones(n_draw) * ε_0') .+ η_1
+
+                truncation_2 = cdf(Normal(0, 1), -α_2 .- x' * β .- z[3] * γ .- ρ .* ε_1)
+
+                if t == 3.0
+
+                    L[i_index] = sum((truncation_0 * ones(n_draw, n_draw)) .* (ones(n_draw) * truncation_1') .* (1 .- truncation_2)) / (n_draw * n_draw)
+
+                elseif t == 4.0
+
+                    L[i_index] = sum((truncation_0 * ones(n_draw, n_draw)) .* (ones(n_draw) * truncation_1') .* (truncation_2)) / (n_draw * n_draw)
+
+                end
+            end
+        end
+        if mod(i_index, 100) == 0
+            pct = i_index / N * 100
+            println(pct)
+        end
+    end
+
+    logL = sum(log.(L))
+
+    res.L = L
+
+    return L, logL
+end
+
+function initialize_accept_reject(ρ::Float64; use_halton=true)
+
+    u_0, u_1, u_2 = initialize_ghk(; use_halton)
+
+    n_trials = length(u_0)
+
+    # initialize vectors to store normal shocks
+    η_0 = zeros(n_trials)
+    η_1 = zeros(n_trials)
+    η_2 = zeros(n_trials)
+
+    # uses Φ_inverse function to transform from uniform to normal
+    for i in 1:n_trials
+        η_0[i] = Φ_inverse(u_0[i])
+        η_1[i] = Φ_inverse(u_1[i])
+        η_2[i] = Φ_inverse(u_2[i])
+    end
+
+    # Define correlated errors
+    ε_0 = η_0 .* (1 / (1 - ρ)^2)
+    ε_1 = ρ .* ε_0 .+ η_1
+    ε_2 = ρ .* ε_1 .+ η_2
+
+    return [ε_0, ε_1, ε_2]
+end
