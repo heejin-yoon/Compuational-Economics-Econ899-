@@ -30,9 +30,12 @@ optim_quadrature = optimize(theta -> -loglikelihood_quardrature(prim, theta, X, 
 res.θ_quadrature = optim_quadrature.minimizer
 
 # GHK
+
 n_draw = 100
 u_0 = halton(3, n_draw)
 u_1 = halton(5, n_draw)
+u_2 = halton(7, n_draw)
+
 # Random.seed!(123)
 # u_0 = rand(Uniform(0, 1), n_trials)
 # Random.seed!(1234)
@@ -40,9 +43,18 @@ u_1 = halton(5, n_draw)
 
 optim_ghk = optimize(theta -> -loglikelihood_ghk(prim, theta, X, Z, T, u_0, u_1)[2], prim.θ_initial, BFGS(), Optim.Options(show_trace=true, iterations=200))
 res.θ_ghk = optim_ghk.minimizer
-show(stdout, "text/plain", res.θ_ghk) 
+
+optim_acceptreject = optimize(theta -> -loglikelihood_acceptreject(prim, theta, X, Z, T, u_0, u_1, u_2)[2], prim.θ_initial, BFGS(), Optim.Options(show_trace=true, iterations=200))
+res.θ_acceptreject = optim_acceptreject.minimizer
 
 a, b = loglikelihood_ghk(prim, prim.θ_initial, X, Z, T, u_0, u_1)
+
+mean(a)
+median(a)
+maximum(a)
+minimum(a)
+
+a, b = loglikelihood_acceptreject(prim, prim.θ_initial, X, Z, T, u_0, u_1, u_2)
 
 mean(a)
 median(a)
