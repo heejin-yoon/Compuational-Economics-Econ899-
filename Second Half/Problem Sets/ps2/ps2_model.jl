@@ -1,7 +1,7 @@
 @with_kw struct Primitives
-    data = DataFrame(load(rt * "/Problem Sets/ps2/Mortgage_performance_data.dta"))
-    KPU_1d::Array{Float64} = Array(DataFrame(CSV.File(rt * "/Problem Sets/ps2/KPU_d1_l20.csv")))
-    KPU_2d::Array{Float64} = Array(DataFrame(CSV.File(rt * "/Problem Sets/ps2/KPU_d2_l20.csv")))
+    data = DataFrame(load(rt * "/Second Half/Problem Sets/ps2/Mortgage_performance_data.dta"))
+    KPU_1d::Array{Float64} = Array(DataFrame(CSV.File(rt * "/Second Half/Problem Sets/ps2/KPU_d1_l20.csv")))
+    KPU_2d::Array{Float64} = Array(DataFrame(CSV.File(rt * "/Second Half/Problem Sets/ps2/KPU_d2_l20.csv")))
 end
 
 mutable struct Results
@@ -40,7 +40,7 @@ end
 
 
 
-function loglikelihood_quardrature(prim::Primitives, θ::Array{Float64}, XX::Array{Float64}, ZZ::Array{Float64}, TT::Array{Float64})
+function loglikelihood_quardrature_alt(prim::Primitives, θ::Array{Float64}, XX::Array{Float64}, ZZ::Array{Float64}, TT::Array{Float64})
     # println(θ)
 
     α_0 = θ[1]
@@ -84,7 +84,7 @@ function loglikelihood_quardrature(prim::Primitives, θ::Array{Float64}, XX::Arr
 end
 
 
-function integrate_quardrature_alt(prim::Primitives, ftn, lower_bound1, d=1, lower_bound2=nothing)
+function integrate_quardrature2(prim::Primitives, ftn, lower_bound1, d=1, lower_bound2=nothing)
     @unpack KPU_1d, KPU_2d = prim
 
     if d == 1
@@ -100,7 +100,7 @@ end
 
 
 
-function loglikelihood_quardrature_alt(prim::Primitives, θ::Array{Float64}, XX::Array{Float64}, ZZ::Array{Float64}, TT::Array{Float64})
+function loglikelihood_quardrature(prim::Primitives, θ::Array{Float64}, XX::Array{Float64}, ZZ::Array{Float64}, TT::Array{Float64})
     # println(θ)
 
     α_0 = θ[1]
@@ -132,7 +132,7 @@ function loglikelihood_quardrature_alt(prim::Primitives, θ::Array{Float64}, XX:
 
         elseif t == 4.0
             m_4(ϵ0, ϵ1) = cdf(Normal(0, 1), (-α_2 .- x' * β .- z[3] * γ .- ρ * ϵ1)) * pdf(Normal(0, 1), (ϵ1 - ρ * ϵ0)) * (pdf(Normal(0, 1), (ϵ0 / σ_0)) / σ_0)
-            L[i_index] = integrate_quardrature_alt(prim, m_4, -α_0 - x' * β - z[1] * γ, 2, -α_1 - x' * β - z[2] * γ)
+            L[i_index] = integrate_quardrature(prim, m_4, -α_0 - x' * β - z[1] * γ, 2, -α_1 - x' * β - z[2] * γ)
         end
     end
 

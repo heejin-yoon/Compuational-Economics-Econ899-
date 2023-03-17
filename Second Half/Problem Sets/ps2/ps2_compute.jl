@@ -1,8 +1,8 @@
-using Parameters, Plots, Optim, StatFiles, DataFrames, CSV, Random, .Threads
+using Parameters, Plots, Optim, StatFiles, DataFrames, CSV, Random, Distributions, .Threads, FloatingTableView
 
 rt = pwd()
 
-include(rt * "/Problem Sets/ps2/ps2_model.jl")
+include(rt * "/Second Half/Problem Sets/ps2/ps2_model.jl")
 
 prim, res = Initialize()
 
@@ -20,11 +20,29 @@ X = Array{Float64}(X)
 Z = Array{Float64}(Z)
 T = Array{Float64}(T)
 
+# res.θ = [0.0061751972825785624
+#     1.220060239340399
+#     -17.008615945472318
+#     0.0018117495054437106
+#     -0.000968136362492816
+#     -0.001580543507744522
+#     -0.0011558920192594763
+#     -0.00013071142705024796
+#     -5.2621090951833314e-5
+#     0.0001990199344835649
+#     -0.00020628735438775667
+#     -0.0016216370604782437
+#     -0.0010281241504542808
+#     -0.0010298735485978336
+#     -0.0021931798123920295
+#     -0.00040926267287037495
+#     0.0006985996606707934
+#     0.0005650677232522111
+#     -0.0011704093057336884
+#     -13.978456563161936]
 
 ## Solve for MLE
-optim_alt = optimize(theta -> -loglikelihood_quardrature_alt(prim, theta, X, Z, T)[2], res.θ, BFGS(), Optim.Options(show_trace=true, iterations=50))
-optim = optimize(theta -> loglikelihood_quardrature_alt(prim, theta, X, Z, T)[2], res.θ, BFGS(), Optim.Options(show_trace=true, iterations=50))
 
-θ_candidate_alt = optim_alt.minimizer
-θ_candidate = optim.minimizer
+optim = optimize(theta -> -loglikelihood_quardrature(prim, theta, X, Z, T)[2], res.θ, BFGS(), Optim.Options(show_trace=true, iterations=200))
+
 
