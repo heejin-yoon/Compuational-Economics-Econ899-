@@ -6,6 +6,7 @@ end
 
 mutable struct Results
     θ::Array{Float64}
+    L::Array{Float64}
 end
 
 function Initialize()
@@ -18,7 +19,8 @@ function Initialize()
     ρ = 0.5
     θ = zeros(20)
     θ = [α_0; α_1; α_2; β; γ; ρ]
-    res = Results(θ)
+    L = zeros(size(prim.data, 1))
+    res = Results(θ, L)
     prim, res
 end
 
@@ -138,6 +140,8 @@ function loglikelihood_quardrature(prim::Primitives, θ::Array{Float64}, XX::Arr
 
     logL = sum(log.(L))
 
+    res.L = L
+    
     return L, logL
 end
 

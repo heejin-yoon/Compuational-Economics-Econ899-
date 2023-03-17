@@ -6,9 +6,10 @@ include(rt * "/Second Half/Problem Sets/ps2/ps2_model.jl")
 
 prim, res = Initialize()
 
+
 ## Set X, Z, Y, T values
 
-X = select(prim.data, :score_0, :rate_spread, :i_large_loan, :i_medium_loan, :i_refinance, :age_r, :cltv, :dti, :cu, :first_mort_r, :i_FHA, :i_open_year2, :i_open_year3, :i_open_year4, :i_open_year5)
+X = select(prim.data, :i_large_loan, :i_medium_loan, :rate_spread, :i_refinance, :age_r, :cltv, :dti, :cu, :first_mort_r, :score_0, :i_FHA, :i_open_year2, :i_open_year3, :i_open_year4, :i_open_year5)
 Y = select(prim.data, :i_close_0, :i_close_1, :i_close_2)
 Y[:, :T] .= 1.0
 Y[(Y.i_close_0.==0.0).&(Y.i_close_1.==1.0), :T] .= 2.0
@@ -20,29 +21,29 @@ X = Array{Float64}(X)
 Z = Array{Float64}(Z)
 T = Array{Float64}(T)
 
-# res.θ = [0.0061751972825785624
-#     1.220060239340399
-#     -17.008615945472318
-#     0.0018117495054437106
-#     -0.000968136362492816
-#     -0.001580543507744522
-#     -0.0011558920192594763
-#     -0.00013071142705024796
-#     -5.2621090951833314e-5
-#     0.0001990199344835649
-#     -0.00020628735438775667
-#     -0.0016216370604782437
-#     -0.0010281241504542808
-#     -0.0010298735485978336
-#     -0.0021931798123920295
-#     -0.00040926267287037495
-#     0.0006985996606707934
-#     0.0005650677232522111
-#     -0.0011704093057336884
-#     -13.978456563161936]
+res.θ = [-5.48100226949492
+    -2.614259560073641
+    -2.2323474393428664
+    0.40452302167241466
+    0.27924492325612493
+    0.264782325756695
+    0.06258457636401359
+    0.15085958657513318
+    -0.04698336957419711
+    0.10285115237450823
+    0.4268824649599777
+    0.21712408213320744
+    -0.18340344234877518
+    0.30116878763758176
+    0.5115433213163416
+    0.1339203500571433
+    -0.0703953500654598
+    -0.07471452242530689
+    0.08134580158999291
+    0.29460879975537024]
+
 
 ## Solve for MLE
 
 optim = optimize(theta -> -loglikelihood_quardrature(prim, theta, X, Z, T)[2], res.θ, BFGS(), Optim.Options(show_trace=true, iterations=200))
-
-
+res.θ = optim.minimizer
