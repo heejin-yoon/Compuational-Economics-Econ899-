@@ -38,17 +38,17 @@ u_2 = halton(7, n_draw)
 
 # Quadrature
 
-optim_quadrature = optimize(theta -> -loglikelihood_quardrature(prim, theta, X, Z, T)[2], prim.θ_initial_quadrature, BFGS(), Optim.Options(show_trace=true, iterations=200))
+optim_quadrature = optimize(theta -> -loglikelihood_quardrature(prim, theta, X, Z, T)[2], prim.θ_initial_quadrature, BFGS(), Optim.Options(show_trace=true, iterations=10))
 res.θ_quadrature = optim_quadrature.minimizer
 
 # GHK
 
-optim_ghk = optimize(theta -> -loglikelihood_ghk(prim, theta, X, Z, T, u_0, u_1)[2], prim.θ_initial_ghk, BFGS(), Optim.Options(show_trace=true, iterations=200))
+optim_ghk = optimize(theta -> -loglikelihood_ghk(prim, theta, X, Z, T, u_0, u_1)[2], prim.θ_initial_ghk, BFGS(), Optim.Options(show_trace=true, iterations=10))
 res.θ_ghk = optim_ghk.minimizer
 
 # Accept/Reject Method
 
-optim_acceptreject = optimize(theta -> -loglikelihood_acceptreject(prim, theta, X, Z, T, u_0, u_1, u_2)[2], prim.θ_initial_acceptreject, BFGS(), Optim.Options(show_trace=true, iterations=200))
+optim_acceptreject = optimize(theta -> -loglikelihood_acceptreject(prim, theta, X, Z, T, u_0, u_1, u_2)[2], prim.θ_initial_acceptreject, BFGS(), Optim.Options(show_trace=true, iterations=10))
 res.θ_acceptreject = optim_acceptreject.minimizer
 
 params = DataFrame([["α₀"; "α₁"; "α₂"; "β_i_large_loan"; "β_i_medium_loan"; "β_rate_spread"; "β_i_refinance"; "β_age_r"; "β_cltv"; "β_dti"; "β_cu"; "β_first_mort_r"; "β_score_0"; "β_i_FHA"; "β_i_open_year2"; "β_i_open_year3"; "β_i_open_year4"; "β_i_open_year5"; "γ"; "ρ"] res.θ_quadrature res.θ_ghk res.θ_acceptreject], [:Parameters, :Quadrature, :GHK, :AcceptReject])
