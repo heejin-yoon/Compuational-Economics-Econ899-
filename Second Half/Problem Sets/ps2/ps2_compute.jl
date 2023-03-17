@@ -21,6 +21,17 @@ X = Array{Float64}(X)
 Z = Array{Float64}(Z)
 T = Array{Float64}(T)
 
+## Random draw from uniform distribution through halton sequence
+
+n_draw = 100
+u_0 = halton(3, n_draw)
+u_1 = halton(5, n_draw)
+u_2 = halton(7, n_draw)
+# Random.seed!(123)
+# u_0 = rand(Uniform(0, 1), n_trials)
+# Random.seed!(1234)
+# u_1 = rand(Uniform(0, 1), n_trials)
+
 
 ## Solve for MLE
 
@@ -31,18 +42,10 @@ res.θ_quadrature = optim_quadrature.minimizer
 
 # GHK
 
-n_draw = 100
-u_0 = halton(3, n_draw)
-u_1 = halton(5, n_draw)
-u_2 = halton(7, n_draw)
-
-# Random.seed!(123)
-# u_0 = rand(Uniform(0, 1), n_trials)
-# Random.seed!(1234)
-# u_1 = rand(Uniform(0, 1), n_trials)
-
 optim_ghk = optimize(theta -> -loglikelihood_ghk(prim, theta, X, Z, T, u_0, u_1)[2], prim.θ_initial, BFGS(), Optim.Options(show_trace=true, iterations=200))
 res.θ_ghk = optim_ghk.minimizer
+
+# Accept/Reject Method
 
 optim_acceptreject = optimize(theta -> -loglikelihood_acceptreject(prim, theta, X, Z, T, u_0, u_1, u_2)[2], prim.θ_initial, BFGS(), Optim.Options(show_trace=true, iterations=200))
 res.θ_acceptreject = optim_acceptreject.minimizer

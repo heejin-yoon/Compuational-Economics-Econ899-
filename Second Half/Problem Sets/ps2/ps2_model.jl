@@ -52,7 +52,9 @@ mutable struct Results
     θ_quadrature::Array{Float64}
     θ_ghk::Array{Float64}
     θ_acceptreject::Array{Float64}
-    L::Array{Float64}
+    L_quadrature::Array{Float64}
+    L_ghk::Array{Float64}
+    L_acceptreject::Array{Float64}
 end
 
 
@@ -64,7 +66,7 @@ function Initialize()
     L_quadrature = zeros(size(prim.data, 1))
     L_ghk = zeros(size(prim.data, 1))
     L_acceptreject = zeros(size(prim.data, 1))
-    res = Results(θ_quadrature, θ_ghk, θ_acceptreject, L)
+    res = Results(θ_quadrature, θ_ghk, θ_acceptreject, L_quadrature, L_ghk, L_acceptreject)
     prim, res
 end
 
@@ -74,11 +76,11 @@ function integrate_quardrature(prim::Primitives, ftn, upper_bound1, d=1, upper_b
 
     integral = 0.0
 
-    if d==1
+    if d == 1
         nodes = log.(KPU_1d[:, 1]) .+ upper_bound1
         integral = sum(KPU_1d[:, 2] .* ftn.(nodes) .* (1 ./ KPU_1d[:, 1]))
 
-    elseif d==2
+    elseif d == 2
         nodes1 = log.(KPU_2d[:, 1]) .+ upper_bound1
         nodes2 = log.(KPU_2d[:, 2]) .+ upper_bound2
         integral = sum(KPU_2d[:, 3] .* ftn.(nodes1, nodes2) .* (1 ./ KPU_2d[:, 1]) .* (1 ./ KPU_2d[:, 2]))
@@ -127,7 +129,7 @@ function loglikelihood_quardrature(prim::Primitives, θ::Array{Float64}, XX::Arr
 
     logL = sum(log.(L))
 
-    res.L = L
+    res.L_quadrature = L
 
     return L, logL
 end
@@ -221,7 +223,7 @@ function loglikelihood_ghk(prim::Primitives, θ::Array{Float64}, XX::Array{Float
 
     logL = sum(log.(L))
 
-    res.L = L
+    res.L_ghk = L
 
     return L, logL
 end
@@ -253,16 +255,16 @@ function loglikelihood_acceptreject(prim::Primitives, θ::Array{Float64}, XX::Ar
         t = TT[i_index]
 
         if t == 1.0
-            L[i_index] = mean( (ϵ_0 .> -α_0 - x' * β - z[1] * γ) )
+            L[i_index] = mean((ϵ_0 .> -α_0 - x' * β - z[1] * γ))
 
         elseif t == 2.0
-            L[i_index] = mean( (ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .> -α_1 - x' * β - z[2] * γ) )
+            L[i_index] = mean((ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .> -α_1 - x' * β - z[2] * γ))
 
         elseif t == 3.0
-            L[i_index] = mean( (ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .< -α_1 - x' * β - z[2] * γ) .* (ϵ_2 .> -α_2 - x' * β - z[3] * γ) )
+            L[i_index] = mean((ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .< -α_1 - x' * β - z[2] * γ) .* (ϵ_2 .> -α_2 - x' * β - z[3] * γ))
 
         elseif t == 4.0
-            L[i_index] = mean( (ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .< -α_1 - x' * β - z[2] * γ) .* (ϵ_2 .< -α_2 - x' * β - z[3] * γ) )
+            L[i_index] = mean((ϵ_0 .< -α_0 - x' * β - z[1] * γ) .* (ϵ_1 .< -α_1 - x' * β - z[2] * γ) .* (ϵ_2 .< -α_2 - x' * β - z[3] * γ))
 
         end
 
@@ -274,7 +276,7 @@ function loglikelihood_acceptreject(prim::Primitives, θ::Array{Float64}, XX::Ar
 
     logL = sum(log.(L))
 
-    res.L = L
+    res.L_acceptreject = L
 
     return L, logL
 end
