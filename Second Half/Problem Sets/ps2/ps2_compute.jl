@@ -40,7 +40,7 @@ u_1 = halton(5, n_draw)
 
 optim_ghk = optimize(theta -> -loglikelihood_ghk(prim, theta, X, Z, T, u_0, u_1)[2], prim.θ_initial, BFGS(), Optim.Options(show_trace=true, iterations=200))
 res.θ_ghk = optim_ghk.minimizer
-
+show(stdout, "text/plain", res.θ_ghk) 
 
 a, b = loglikelihood_ghk(prim, prim.θ_initial, X, Z, T, u_0, u_1)
 
