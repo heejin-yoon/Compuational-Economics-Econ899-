@@ -158,6 +158,8 @@ function object_function(λ::Float64, method, gmm_method)
 
     if gmm_method == "1step"
 
+        res.β = vec(β)
+
         ObjFn = (ρ'*Z*inv(Z'*Z)*Z'*ρ)[1, 1]
     
     elseif gmm_method == "2step"
