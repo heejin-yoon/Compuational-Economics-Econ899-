@@ -1,7 +1,8 @@
 using Parameters, Plots, Interpolations, Optim, Printf
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/5.Miscellaneous/CompEcon Practice/ps7_8/julia")
-include("ps7_model_hj.jl")
+rt = pwd()
+
+include(rt * "/First Half/Problem Sets/ps7_F17/julia/ps7_F17_model_hj.jl")
 
 ##
 
@@ -21,16 +22,16 @@ pol_func_interp_cubic = interpolate(res_cubic.pol_func, (BSpline(Cubic(Line(OnGr
 k_ss_index, K_ss_index = ss_index(prim, res)
 
 # Value functions
-plot(prim.k_grid, val_func_interp_linear[:, K_ss_index], title = "Value function with linear` interpolation at K = Kₛₛ", xlabel = "k", labels = "")
-plot(prim.K_grid, val_func_interp_linear[k_ss_index, :], title = "Value function with linear interpolation at k = kₛₛ", xlabel = "K", labels = "")
-plot(prim.k_grid, val_func_interp_cubic[:, K_ss_index], title = "Value function with cubic interpolation at K = Kₛₛ", xlabel = "k", labels = "")
-plot(prim.K_grid, val_func_interp_cubic[k_ss_index, :], title = "Value function with cubic interpolation at k = kₛₛ", xlabel = "K", labels = "")
+plot(prim.k_grid, val_func_interp_linear[:, K_ss_index], title="Value function with linear` interpolation at K = Kₛₛ", xlabel="k", labels="")
+plot(prim.K_grid, val_func_interp_linear[k_ss_index, :], title="Value function with linear interpolation at k = kₛₛ", xlabel="K", labels="")
+plot(prim.k_grid, val_func_interp_cubic[:, K_ss_index], title="Value function with cubic interpolation at K = Kₛₛ", xlabel="k", labels="")
+plot(prim.K_grid, val_func_interp_cubic[k_ss_index, :], title="Value function with cubic interpolation at k = kₛₛ", xlabel="K", labels="")
 
 # Policy functions
-plot(prim.k_grid, pol_func_interp_linear[:, K_ss_index], title = "Policy function with linear interpolation at K = Kₛₛ", xlabel = "k", labels = "")
-plot(prim.K_grid, pol_func_interp_linear[k_ss_index, :], title = "Policy function with linear interpolation at k = kₛₛ", xlabel = "K", labels = "")
-plot(prim.k_grid, pol_func_interp_cubic[:, K_ss_index], title = "Policy function with cubic interpolation at K = Kₛₛ", xlabel = "k", labels = "")
-plot(prim.K_grid, pol_func_interp_cubic[k_ss_index, :], title = "Policy function with cubic interpolation at k = kₛₛ", xlabel = "K", labels = "")
+plot(prim.k_grid, pol_func_interp_linear[:, K_ss_index], title="Policy function with linear interpolation at K = Kₛₛ", xlabel="k", labels="")
+plot(prim.K_grid, pol_func_interp_linear[k_ss_index, :], title="Policy function with linear interpolation at k = kₛₛ", xlabel="K", labels="")
+plot(prim.k_grid, pol_func_interp_cubic[:, K_ss_index], title="Policy function with cubic interpolation at K = Kₛₛ", xlabel="k", labels="")
+plot(prim.K_grid, pol_func_interp_cubic[k_ss_index, :], title="Policy function with cubic interpolation at k = kₛₛ", xlabel="K", labels="")
 
 ##
 

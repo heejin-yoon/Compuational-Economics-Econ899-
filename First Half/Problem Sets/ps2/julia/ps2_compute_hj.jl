@@ -1,7 +1,8 @@
 using Parameters, Plots, Printf, Weave
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/5.Miscellaneous/CompEcon Practice/ps2/julia/")
-include("ps2_model_hj.jl") #import the functions that solve our growth model
+rt = pwd()
+
+include(rt * "/First Half/Problem Sets/ps2/julia/ps2_model_hj.jl") #import the functions that solve our growth model
 
 ## Solve the model
 
@@ -23,20 +24,20 @@ println(" ")
 ## Plot figures
 
 # Plot value functions
-Plots.plot(prim.a_grid, res.val_func, title="Value Functions", labels = ["Employed" "Unemployed"])
+Plots.plot(prim.a_grid, res.val_func, title="Value Functions", labels=["Employed" "Unemployed"])
 Plots.savefig("ps2_value_functions.png")
 println("Value functions are saved.")
 println(" ")
 
 # Plot policy functions
-Plots.plot(prim.a_grid, [res.pol_func prim.a_grid], title="Policy Functions", labels = ["Employed" "Unemployed" "45° Line"])
-plot!([a_ub], seriestype="vline", linestyle = :dash, linecolor = "grey", labels = "ā = 1.048")
+Plots.plot(prim.a_grid, [res.pol_func prim.a_grid], title="Policy Functions", labels=["Employed" "Unemployed" "45° Line"])
+plot!([a_ub], seriestype="vline", linestyle=:dash, linecolor="grey", labels="ā = 1.048")
 Plots.savefig("ps2_policy_functions.png")
 println("Policy functions are saved.")
 println(" ")
 
 # Plot asset distribution
-Plots.plot(prim.a_grid, res.μ, title="Asset Distribution", labels = ["Employed" "Unemployed"])
+Plots.plot(prim.a_grid, res.μ, title="Asset Distribution", labels=["Employed" "Unemployed"])
 Plots.savefig("ps2_asset_distributions.png")
 println("Asset Distributions are saved.")
 println(" ")
@@ -46,13 +47,13 @@ println(" ")
 w, cdf_w, cum_w = w_dist(prim, res)
 
 # Plot Wealth distribution
-Plots.plot(prim.a_grid, w, title="Wealth Distribution", labels = ["Employed" "Unemployed"])
+Plots.plot(prim.a_grid, w, title="Wealth Distribution", labels=["Employed" "Unemployed"])
 Plots.savefig("ps2_wealth_distributions.png")
 println("Wealth Distributions are saved.")
 println(" ")
 
 # Lorenz Curve
-Plots.plot(cdf_w, [cum_w cdf_w], title="Lorenz Curve", labels = ["45° Line" "Lorenz Curve"])
+Plots.plot(cdf_w, [cum_w cdf_w], title="Lorenz Curve", labels=["45° Line" "Lorenz Curve"])
 Plots.savefig("ps2_lorenz_curve.png")
 println("Lorenz Curve is saved.")
 println(" ")
@@ -69,7 +70,7 @@ println(" ")
 Welfare_fb, lambda, pro_fb = Wfb_lambda(prim, res)
 
 # Plot λ(a,s)
-Plots.plot(prim.a_grid, lambda, title="λ(a, s)", labels = ["Employed" "Unemployed"])
+Plots.plot(prim.a_grid, lambda, title="λ(a, s)", labels=["Employed" "Unemployed"])
 Plots.savefig("ps2_lambda.png")
 println("Lambda is saved.")
 println(" ")
@@ -88,4 +89,4 @@ println(" ")
 
 ##
 
-weave("ps2_model_hj.jl", doctype = "md2pdf", out_path = "weave")
+weave("ps2_model_hj.jl", doctype="md2pdf", out_path="weave")

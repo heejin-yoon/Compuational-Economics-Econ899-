@@ -1,7 +1,8 @@
 using Parameters, Plots, Weave, Printf
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/3.Wisconsin/2021 Fall/Econ 899/Problem Sets/ps1/julia/")
-include("ps1_model_hj.jl") #import the functions that solve our growth model
+rt = pwd()
+
+include(rt * "/First Half/Problem Sets/ps1/julia/ps1_model_hj.jl") #import the functions that solve our growth model
 
 ## Q1
 

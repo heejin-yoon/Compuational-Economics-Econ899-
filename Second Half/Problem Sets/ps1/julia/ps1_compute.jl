@@ -7,8 +7,9 @@
 
 using Parameters, StatFiles, DataFrames, Optim, Weave, FloatingTableView
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/3.Wisconsin/2021 Fall/Econ 899/github/Compuational-Economics/Second Half/Problem Sets/ps1")
-include("ps1_model.jl");
+rt = pwd()
+
+include(rt * "/Second Half/Problem Sets/ps1/julia/ps1_model.jl")
 
 prim = Primitives()
 ## Data Import

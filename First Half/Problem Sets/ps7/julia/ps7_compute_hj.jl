@@ -1,15 +1,16 @@
 ##
 using Parameters, Plots, Random, Optim, Distributions, LinearAlgebra
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/5.Miscellaneous/CompEcon Practice/ps7/julia")
-include("ps7_model_hj.jl");                                                         # import the functions that solve our growth model
+rt = pwd()
+
+include(rt * "/First Half/Problem Sets/ps7/julia/ps7_model_hj.jl")                                                  # import the functions that solve our growth model
 
 ##
 prim, est = Initialize()
 
 est.x, est.m = Truedata(prim)
 
-plot(collect(1:prim.T), est.x, labels = "", title = "True data process")
+plot(collect(1:prim.T), est.x, labels="", title="True data process")
 savefig("truedata.png")
 
 ##

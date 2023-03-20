@@ -1,7 +1,8 @@
 using Parameters, Plots, Printf, Setfield, DataFrames, DelimitedFiles
 
-cd("C:/Users/hyoon76/OneDrive - UW-Madison/5.Miscellaneous/CompEcon Practice/ps3/")
-include("ps3_model_hj.jl")
+rt = pwd()
+
+include(rt * "/First Half/Problem Sets/ps3/julia/ps3_model_hj.jl")
 
 ## Exercise 1
 
@@ -14,20 +15,20 @@ elapse = @elapsed res.val_func, res.pol_func, res.lab_func = Bellman(prim, res)
 
 # Value function
 
-plot(prim.a_grid, res.val_func[50, :, 1], title="Value Function at age 50", labels = "", legend=:topleft)
+plot(prim.a_grid, res.val_func[50, :, 1], title="Value Function at age 50", labels="", legend=:topleft)
 savefig("val_func_50.png")
 println("Value function at age 50 is saved.\n")
 
 
 # Policy functions
 
-plot(prim.a_grid, [res.pol_func[20, :, 1] res.pol_func[20, :, 2] prim.a_grid], title="Policy Functions at age 20", labels = ["High" "Low" "45° Line"], legend=:topleft)
+plot(prim.a_grid, [res.pol_func[20, :, 1] res.pol_func[20, :, 2] prim.a_grid], title="Policy Functions at age 20", labels=["High" "Low" "45° Line"], legend=:topleft)
 savefig("pol_func_20.png")
 println("Policy function at age 20 is saved.\n")
 
 # Saving functnions
 
-plot(prim.a_grid, [res.pol_func[20, :, 1].-prim.a_grid res.pol_func[20, :, 2].-prim.a_grid], title="Saving Functions at age 20", labels = ["High" "Low"], legend=:topright)
+plot(prim.a_grid, [res.pol_func[20, :, 1] .- prim.a_grid res.pol_func[20, :, 2] .- prim.a_grid], title="Saving Functions at age 20", labels=["High" "Low"], legend=:topright)
 savefig("sav_func_20.png")
 println("Saving function at age 20 is saved.\n")
 
@@ -38,7 +39,7 @@ elapse = @elapsed res.F = F_dist(prim, res)
 age = collect(1:1:prim.N)
 @printf("\nIt took %0.3f seconds to calculate F distribution.\n\n", float(elapse))
 
-plot(age, μ, title = "Relative size of each cohort of age", labels = "", legend=:topleft)
+plot(age, μ, title="Relative size of each cohort of age", labels="", legend=:topleft)
 savefig("mu_dist.png")
 println("μ distribution is saved.\n")
 
@@ -76,7 +77,7 @@ println("***************************************")
 
 prim, res = Initialize()
 prim = @set prim.z = [0.5, 0.5]
-prim = @set prim.e = prim.η*prim.z'
+prim = @set prim.e = prim.η * prim.z'
 
 elapse = @elapsed solve_model(prim, res)
 @printf("\nIt took %0.3f seconds to solve the model using Julia.\n\n", float(elapse))
@@ -93,7 +94,7 @@ println("***************************************")
 
 prim, res = Initialize()
 prim = @set prim.z = [0.5, 0.5]
-prim = @set prim.e = prim.η*prim.z'
+prim = @set prim.e = prim.η * prim.z'
 prim = @set prim.θ = 0
 
 elapse = @elapsed solve_model(prim, res)
