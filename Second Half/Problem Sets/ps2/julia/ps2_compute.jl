@@ -2,7 +2,7 @@ using Parameters, Plots, Optim, StatFiles, DataFrames, CSV, Random, Distribution
 
 rt = pwd()
 
-include(rt * "/Second Half/Problem Sets/ps2/ps2_model.jl")
+include(rt * "/Second Half/Problem Sets/ps2/julia/ps2_model.jl")
 
 prim, res = Initialize()
 
